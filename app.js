@@ -92,9 +92,10 @@ function renderMessages(animate = true) {
       <article class="message message-self">
         <div class="message-content">
           <div class="message-meta"><strong>You</strong><time>${escapeHtml(message.time)}</time></div>
-          <div class="message-bubble" data-action="menu" data-id="${message.id}" role="button" tabindex="0" aria-expanded="false">${message.replyTo ? `<div class="reply-quote"><span>Replying to</span><p>${escapeHtml(message.replyTo.text)}</p></div>` : ""}${escapeHtml(message.text)}</div>
+          <div class="message-bubble">${message.replyTo ? `<div class="reply-quote"><span>Replying to</span><p>${escapeHtml(message.replyTo.text)}</p></div>` : ""}${escapeHtml(message.text)}</div>
           ${message.reactions.length ? `<div class="message-reactions">${message.reactions.map((reaction) => `<button data-action="react" data-id="${message.id}" data-reaction="${reaction}">${reaction}<span>1</span></button>`).join("")}</div>` : ""}
           <div class="message-controls">
+            <button class="message-actions-trigger" data-action="menu" aria-expanded="false">Reply or react</button>
             <div class="message-actions">
               <button data-action="reply" data-id="${message.id}">Reply</button><span></span>
               ${reactions.map((reaction) => `<button class="reaction-option ${message.reactions.includes(reaction) ? "active" : ""}" data-action="react" data-id="${message.id}" data-reaction="${reaction}" aria-label="React with ${reaction}">${reaction}</button>`).join("")}
@@ -130,9 +131,7 @@ function updateReplyBanner() {
 function closeMessageMenus() {
   document.querySelectorAll(".message-controls.actions-open").forEach((controls) => {
     controls.classList.remove("actions-open")
-    controls.closest(".message-content")
-      ?.querySelector(".message-bubble")
-      ?.setAttribute("aria-expanded", "false")
+    controls.querySelector(".message-actions-trigger")?.setAttribute("aria-expanded", "false")
   })
 }
 
@@ -213,7 +212,7 @@ $("#chatMessages").addEventListener("click", (event) => {
   if (!button) return
   const id = Number(button.dataset.id)
   if (button.dataset.action === "menu") {
-    const controls = button.closest(".message-content").querySelector(".message-controls")
+    const controls = button.closest(".message-controls")
     const shouldOpen = !controls.classList.contains("actions-open")
     closeMessageMenus()
     if (shouldOpen) {
@@ -234,12 +233,6 @@ $("#chatMessages").addEventListener("click", (event) => {
     $("#messageInput").focus()
   }
 })
-$("#chatMessages").addEventListener("keydown", (event) => {
-  if ((event.key === "Enter" || event.key === " ") && event.target.matches(".message-bubble")) {
-    event.preventDefault()
-    event.target.click()
-  }
-})
 $("#cancelReply").addEventListener("click", () => {
   replyingTo = null
   updateReplyBanner()
@@ -252,7 +245,7 @@ document.addEventListener("keydown", (event) => {
   }
 })
 document.addEventListener("click", (event) => {
-  if (!event.target.closest(".message-controls, .message-bubble")) closeMessageMenus()
+  if (!event.target.closest(".message-controls")) closeMessageMenus()
 })
 
 const names = ["QuietPine", "SoftEcho", "MossMoon", "FernFox", "CloudAtlas"]
